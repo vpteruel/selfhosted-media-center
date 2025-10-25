@@ -66,6 +66,14 @@ This media center is composed of the following services:
     SERVER_CITIES=your_server_cities
     ```
 
+### Troubleshoot VPN
+
+    Once the Docker is launched, you can test your VPN with the following command :
+
+    ```bash
+    docker exec qbittorrent curl -s https://api.ipify.org/
+    ```
+
 ### Running the Media Center
 
 You can start the services using Docker Compose. It is recommended to start the services in the following order:
