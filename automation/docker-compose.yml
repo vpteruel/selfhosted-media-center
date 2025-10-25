@@ -1,0 +1,108 @@
+services:
+  # ========================
+  # 🔥 Flaresolverr
+  # ========================
+  flaresolverr:
+    image: flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TZ}
+      - HEADLESS=true
+      - TEST_URL=https://www.google.com
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+    networks:
+      - media-net
+
+  # ========================
+  # 🔍 Jackett (indexers)
+  # ========================
+  jackett:
+    image: linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - ./config/jackett:/config
+    ports:
+      - "9117:9117"
+    depends_on:
+      - flaresolverr
+    restart: unless-stopped
+    networks:
+      - media-net
+
+  # ========================
+  # 🧠 Prowlarr (centralized indexers)
+  # ========================
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - ./config/prowlarr:/config
+    ports:
+      - "9696:9696"
+    depends_on:
+      - flaresolverr
+    restart: unless-stopped
+    networks:
+      - media-net
+
+  # ========================
+  # 📺 Sonarr (shows)
+  # ========================
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - ./config/sonarr:/config
+      - ${MEDIA_PATH}/series:/tv
+      - ${MEDIA_PATH}/downloads/complete:/downloads
+    ports:
+      - "8989:8989"
+    depends_on:
+      - prowlarr
+    restart: unless-stopped
+    networks:
+      - media-net
+
+  # ========================
+  # 🎬 Radarr (movies)
+  # ========================
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - ./config/radarr:/config
+      - ${MEDIA_PATH}/movies:/movies
+      - ${MEDIA_PATH}/downloads/complete:/downloads
+    ports:
+      - "7878:7878"
+    depends_on:
+      - prowlarr
+    restart: unless-stopped
+    networks:
+      - media-net
+
+# ========================
+# 🌐 Shared network
+# ========================
+networks:
+  media-net:
+    driver: bridge

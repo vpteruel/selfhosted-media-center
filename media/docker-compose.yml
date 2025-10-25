@@ -1,0 +1,71 @@
+services:
+  # ========================
+  # 📺 Jellyfin - Media server
+  # ========================
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./config/jellyfin:/config
+      - ${MEDIA_PATH}/movies:/data/movies
+      - ${MEDIA_PATH}/series:/data/tvshows
+    ports:
+      - "8096:8096"    # HTTP Web
+      # - "8920:8920"  # HTTPS (ativar se precisar de SSL)
+    devices:
+      - /dev/dri:/dev/dri   # Habilita aceleração de hardware Intel/AMD (opcional)
+    restart: unless-stopped
+    networks:
+      - media-net
+
+  # ========================
+  # 🎟️ Jellyseerr - Media requests
+  # ========================
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TZ}
+    volumes:
+      - ./config/jellyseerr:/app/config
+    ports:
+      - "5055:5055"
+    depends_on:
+      - jellyfin
+    restart: unless-stopped
+    networks:
+      - media-net
+
+  # ========================
+  # 🈹 Bazarr - Automatic subtitles
+  # ========================
+  bazarr:
+    image: linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./config/bazarr:/config
+      - ${MEDIA_PATH}/movies:/movies
+      - ${MEDIA_PATH}/series:/tv
+    ports:
+      - "6767:6767"
+    depends_on:
+      - jellyfin
+    restart: unless-stopped
+    networks:
+      - media-net
+
+# ========================
+# 🌐 Shared network
+# ========================
+networks:
+  media-net:
+    driver: bridge

@@ -1,0 +1,7 @@
+.env
+automation/.env
+automation/config/
+download/.env
+download/config/
+media/.env
+media/config/
